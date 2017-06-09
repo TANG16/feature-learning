@@ -84,7 +84,7 @@ class ConvolutionalAutoencoder(object):
         n_exampfles = input_shape[0]
         n_latent_units = n_filters[-1]
 
-        latnet_layer_mask = tf.placeholder(tf.float32, (n_exampfles, n_latent_units), name='x')
+        latent_layer_mask = tf.placeholder(tf.float32, (n_exampfles, n_latent_units), name='x')
 
         if len(x.get_shape()) != 4:
             raise ValueError('input must be 4 dimensional.')
@@ -116,19 +116,72 @@ class ConvolutionalAutoencoder(object):
             output = self._lrelu(
                 tf.add(tf.nn.conv2d(
                     current_input, W, stride=[1, 2, 2, 1], padding='SAME'
-                    ), b))
-            pooled_output = tf.nn.max_pool(output, ksize=[1, 2, 2, 1], stride=[1, 2, 2, 1], padding='SAME')
+                    ), b
+                )
+            )
+            pooled_output = tf.nn.max_pool(
+                output, ksize=[1, 2, 2, 1], stride=[1, 2, 2, 1], padding='SAME')
             shapes.append(pooled_output.get_shape().as_list())
 
             current_input = pooled_output
 
-            # reconstruction
-            y = current_input
+        # store the latent convolved representation
+        z = current_input
+        current_input = tf.mul(current_input, latent_layer_mask)
+        encoder.reverse()
+        shapes.reverse()
 
-            # cost function measures pixel-wise difference
-            cost = tf.reduce_sum(tf.square(y -x))
+        # rebuild the encoder using the same weights
+        for layer_i, shape in enumerate(shapes):
 
-            return {'x': x, 'y': y, 'cost': cost, 'latent_layer_mast': latnet_layer_mask}
+            W = encoder[layer_i]
+            b = tf.Variable(tf.zeros([W.get_shape().as_list()[2]]))
+
+            new_height = shape[1] *2
+            new_width = shape[2] *2
+            input_unpooled = tf.image.resize_images(current_input, new_height, new_width)
+
+            batch_size = tf.shape(current_input)[0]
+            n_channels = W.get_shape().as_list()[2]
+
+            output = self._lrelu(
+                tf.add(tf.nn.conv2d(
+                    input_unpooled, W,
+                    tf.pack([batch_size, new_height, new_width, n_channels]),
+                    stride=[1, 2, 2, 1], padding='SAME'
+                    ), b
+                )
+            )
+
+            current_input = output
+
+        # reconstruction
+        y = current_input
+
+        # cost function measures pixel-wise difference
+        cost = tf.reduce_sum(tf.square(y -x))
+
+        return {'x': x, 'z': z, 'y': y, 'cost': cost, 'latent_layer_mast': latent_layer_mask}
+
+
+    @staticmethod
+    def _random_batch_generator(images, batch_size=100):
+
+        # shuffle the images in every epoch
+        current_permutation = np.random.permutation(range(len(images)))
+        epoch_images = images[current_permutation, ...]
+
+        current_batch_idx = 0
+        while current_batch_idx < len(images):
+            end_idx = min(current_batch_idx + batch_size, len(images))
+            subset = epoch_images[current_batch_idx: end_idx]
+            current_batch_idx += batch_size
+            yield subset
+
+    @staticmethod
+    def _calculate_latent_activations(sess, autoencoder, images, mean_img):
+        all_images_norm = np.array([img - mean_img for img in images])
+        return sess.run(autoencoder['z'], feed_dict={autoencoder['x']: all_images_norm})
 
 
 
