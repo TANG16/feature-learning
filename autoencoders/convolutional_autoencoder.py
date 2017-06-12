@@ -14,9 +14,39 @@ class ConvolutionalAutoencoder(object):
         self.n_filters = n_filters # number of filters for each layer of cnn
         self.filter_sizes = filter_sizes
 
-    def learn():
+    def learn(self, training_data, visualize_result=True):
         # implement learn method
-        pass
+
+        images = training_data
+
+        width, height, n_channels = images[0].shape
+
+        batch_size = 100 # ajust this param when needed
+        n_epochs = self.n_epochs
+        n_examples = len(images)
+        n_features = self.n_filters[-1] #last layer of cnn contains the feature number
+
+        mean_img = np.mean(images, axis=0)
+
+        # ae here is a dict of autoencoder params, eg: x, y, z, cost
+        ae = self._autoencoder(
+            input_shape=[None, width, height, n_channels],
+            n_filters=self.nfilters,
+            filter_sizes=self.filter_sizes
+        )
+        learning_rate = self.learning_rate
+        # use adam optimizer
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
+
+        sess = tf.Session()
+        sess.run(tf.initialize_all_variables())
+        no_op_latent_layer_mask = np.ones((1, n_features))
+
+        # fit training data
+        for epoch_i in range(n_epochs):
+            batches = self._random_batch_generator(images, batch_size)
+            for batch_i in range(n_examples // batch_size):
+               #TODO this is not finished 
 
     def output():
         pass
@@ -81,10 +111,10 @@ class ConvolutionalAutoencoder(object):
         # placeholder for input to the network
         x = tf.placeholder(tf.float32, input_shape, name='x')
 
-        n_exampfles = input_shape[0]
+        n_examples = input_shape[0]
         n_latent_units = n_filters[-1]
 
-        latent_layer_mask = tf.placeholder(tf.float32, (n_exampfles, n_latent_units), name='x')
+        latent_layer_mask = tf.placeholder(tf.float32, (n_examples, n_latent_units), name='x')
 
         if len(x.get_shape()) != 4:
             raise ValueError('input must be 4 dimensional.')
