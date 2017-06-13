@@ -92,7 +92,8 @@ class ConvolutionalAutoencoder(object):
         original_reconstructions, original_latent_activations = output(no_op_latent_layer_mask)
 
         if visualize_result:
-            self._visualize(images, original_latent_activations, original_reconstructions, output, mean_img)
+            from visualize import visualize
+            visualize(images, original_latent_activations, original_reconstructions, output, mean_img)
 
         all_activations_reordered = np.rollaxis(original_latent_activations, 3, 1)
 
@@ -260,10 +261,4 @@ class ConvolutionalAutoencoder(object):
     def _calculate_latent_activations(sess, autoencoder, images, mean_img):
         all_images_norm = np.array([img - mean_img for img in images])
         return sess.run(autoencoder['z'], feed_dict={autoencoder['x']: all_images_norm})
-
-
-    @staticmethod
-    def _visualize():
-        pass
-
 
