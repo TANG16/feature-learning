@@ -46,10 +46,58 @@ class ConvolutionalAutoencoder(object):
         for epoch_i in range(n_epochs):
             batches = self._random_batch_generator(images, batch_size)
             for batch_i in range(n_examples // batch_size):
-               #TODO this is not finished 
+               batch_xs = batches.next()
+               train = np.array([img - mean_img for img in batch_xs])
+               sess.run(optimizer, feed_dict={ae['cost']: train, ad['latent_layer_mask']: no_op_latent_layer_mask})
+           print(epoch_i, sess.run(ae['cost'], feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask}))
 
-    def output():
-        pass
+        # save params to checkpoint file
+        saver = tf.train.Saver()
+        SAVE_PATH = 'model/cae_model.ckpt'
+        save_path = saver.save(sess, SAVE_PATH)
+        print "Model is saved in file: {0}".format(save_path)
+        saver.export_meta_graph(SAVE_PATH + '.meta')
+        print graph saved
+
+        def output(latent_layer_mask):
+
+            activations = []
+            reconstructions = []
+            n_examples = len(images)
+
+            def from_to(start_index, end_index):
+                batch_xs = images[start_index: end_index]
+                test = np.array([img - mean_img for img in batch_xs])
+
+                recon, z = sess.run([ae['y'], ae['z']], feed_dict={ae['x']: test, ae['latent_layer_mask']: latent_layer_mask})
+                reconstructions.extend(recon)
+                activations.extend(z)
+
+            current_end_index = 0
+            for batch_i in range(n_examples // batch_size):
+                start_index = batch_i * batch_size
+                end_index = start_index + batch_size
+                from_to(start_index, end_index)
+                current_end_index = end_index
+
+            remains = n_examples % batch_size
+            if remains > 0:
+                from_to(
+                    start_index=current_end_index,
+                    end_index=current_end_index + remains
+                )
+
+            return np.array(reconstructions), np.array(activations)
+
+        original_reconstructions, original_latent_activations = output(no_op_latent_layer_mask)
+
+        if visualize_result:
+            self._visualize(images, original_latent_activations, original_reconstructions, output, mean_img)
+
+        all_activations_reordered = np.rollaxis(original_latent_activations, 3, 1)
+
+        return all_activations_reordered
+
 
     def _lrelu(x, leak=0.2, name="lrelu"):
         """
@@ -214,6 +262,8 @@ class ConvolutionalAutoencoder(object):
         return sess.run(autoencoder['z'], feed_dict={autoencoder['x']: all_images_norm})
 
 
-
+    @staticmethod
+    def _visualize():
+        pass
 
 
