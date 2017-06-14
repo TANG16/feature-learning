@@ -1,19 +1,19 @@
+
 import cv2
 import numpy as np
 import os
 import sys
+
 
 def float32_lab_to_uint8_bgr(image):
     upscaled_image = image * 256
     uint8_image = np.uint8(upscaled_image)
     return cv2.cvtColor(uint8_image, cv2.COLOR_LAB2BGR)
 
-
 def float32_lab_to_uint8_rgb(image):
     upscaled_image = image * 256
     uint8_image = np.uint8(upscaled_image)
     return cv2.cvtColor(uint8_image, cv2.COLOR_LAB2RGB)
-
 
 def normalize_image(image):
     return np.float32(image) / 256
@@ -21,10 +21,8 @@ def normalize_image(image):
 def read_image_bgr(path):
     return cv2.imread(path, 3)
 
-
 def bgr_to_lab(bgr_image):
     return cv2.cvtColor(bgr_image, cv2.COLOR_BGR2LAB)
-
 
 def bgr_to_rgb(bgr_image):
     return cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
@@ -35,7 +33,6 @@ def display_image(image, wait_ms):
 
 def resize_image(image, w, h):
     return cv2.resize(image, (w, h))
-
 
 def prepare_image(bgr_image, width_height):
     image_lab = bgr_to_lab(bgr_image)
@@ -84,4 +81,3 @@ def build_rgb_image_set(dir_path, width_height):
         images.append(resize_image(bgr_to_rgb(read_image_bgr(file_path)), width_height, width_height))
 
     return images
-
