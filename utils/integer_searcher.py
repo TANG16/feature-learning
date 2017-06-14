@@ -6,7 +6,7 @@ from vionel_feature_learning.utils import semantic_hash_search
 from vionel_feature_learning.utils.image_utils import read_image_bgr, resize_image, bgr_to_rgb
 
 
-class IntegerSearcher:
+class IntegerSearcher(object):
 
     def __init__(self, image_paths, image_feature_vectors):
 

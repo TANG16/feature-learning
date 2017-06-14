@@ -4,7 +4,7 @@ import numpy as np
 import math
 
 
-class ConvolutionalFeatureFinder:
+class ConvolutionalFeatureFinder(object):
 
     def __init__(self, n_filters, filter_sizes, learning_rate, num_epochs):
         self.learning_rate = learning_rate

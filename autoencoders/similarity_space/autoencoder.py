@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class SimilaritySpaceAutoencoder:
+class SimilaritySpaceAutoencoder(object):
 
     def __init__(self, n_features, learning_rate):
         self.num_features = n_features
