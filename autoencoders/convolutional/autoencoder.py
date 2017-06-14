@@ -1,63 +1,55 @@
-import matplotlib.pyplot as plt
+
 import tensorflow as tf
 import numpy as np
-import heapq
 import math
-import sys
-import cv2
 
-class ConvolutionalAutoencoder(object):
 
-    def __init__(self, n_filters, filter_sizes, learning_rate, n_epochs):
+class ConvolutionalFeatureFinder:
+
+    def __init__(self, n_filters, filter_sizes, learning_rate, num_epochs):
         self.learning_rate = learning_rate
-        self.n_epochs = n_epochs
-        self.n_filters = n_filters # number of filters for each layer of cnn
+        self.num_epochs = num_epochs
+        self.n_filters = n_filters
         self.filter_sizes = filter_sizes
 
-    def learn(self, training_data, visualize_result=True):
-        # implement learn method
+    def learn(self, training_data, visualize_result=False):
 
         images = training_data
 
-        width, height, n_channels = images[0].shape
+        width, height, num_channels = images[0].shape
 
-        batch_size = 100 # ajust this param when needed
-        n_epochs = self.n_epochs
+        batch_size = 100
+        n_epochs = self.num_epochs
         n_examples = len(images)
-        n_features = self.n_filters[-1] #last layer of cnn contains the feature number
+        n_features = self.n_filters[-1]
+
+        if n_examples < batch_size:
+            raise ValueError("Not enough training examples. Minimum {}, got {}".format(batch_size, n_examples))
 
         mean_img = np.mean(images, axis=0)
 
-        # ae here is a dict of autoencoder params, eg: x, y, z, cost
         ae = self._autoencoder(
-            input_shape=[None, width, height, n_channels],
-            n_filters=self.nfilters,
+            input_shape=[None, width, height, num_channels],
+            n_filters=self.n_filters,
             filter_sizes=self.filter_sizes
         )
+
         learning_rate = self.learning_rate
-        # use adam optimizer
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
 
         sess = tf.Session()
         sess.run(tf.initialize_all_variables())
+
         no_op_latent_layer_mask = np.ones((1, n_features))
 
-        # fit training data
+        # Fit all training data
         for epoch_i in range(n_epochs):
             batches = self._random_batch_generator(images, batch_size)
             for batch_i in range(n_examples // batch_size):
-               batch_xs = batches.next()
-               train = np.array([img - mean_img for img in batch_xs])
-               sess.run(optimizer, feed_dict={ae['cost']: train, ad['latent_layer_mask']: no_op_latent_layer_mask})
-           print(epoch_i, sess.run(ae['cost'], feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask}))
-
-        # save params to checkpoint file
-        saver = tf.train.Saver()
-        SAVE_PATH = 'model/cae_model.ckpt'
-        save_path = saver.save(sess, SAVE_PATH)
-        print "Model is saved in file: {0}".format(save_path)
-        saver.export_meta_graph(SAVE_PATH + '.meta')
-        print graph saved
+                batch_xs = batches.next()
+                train = np.array([img - mean_img for img in batch_xs])
+                sess.run(optimizer, feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask})
+            print(epoch_i, sess.run(ae['cost'], feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask}))
 
         def output(latent_layer_mask):
 
@@ -66,7 +58,7 @@ class ConvolutionalAutoencoder(object):
             n_examples = len(images)
 
             def from_to(start_index, end_index):
-                batch_xs = images[start_index: end_index]
+                batch_xs = images[start_index:end_index]
                 test = np.array([img - mean_img for img in batch_xs])
 
                 recon, z = sess.run([ae['y'], ae['z']], feed_dict={ae['x']: test, ae['latent_layer_mask']: latent_layer_mask})
@@ -99,47 +91,52 @@ class ConvolutionalAutoencoder(object):
 
         return all_activations_reordered
 
-
+    @staticmethod
     def _lrelu(x, leak=0.2, name="lrelu"):
-        """
-        Leaky rectifier, implemented in tensorflow style
+        """Leaky rectifier.
 
         Parameters
         ----------
-        x: Tensor
+        x : Tensor
             The tensor to apply the nonlinearity to.
-        leak: float, optional
+        leak : float, optional
             Leakage parameter.
-        name: str, optional
+        name : str, optional
             Variable scope to use.
 
         Returns
         -------
-        x: Tensor
-            output of the nonlinearity.
-
+        x : Tensor
+            Output of the nonlinearity.
         """
-        with tf.varuable_scope(name):
+        with tf.variable_scope(name):
             f1 = 0.5 * (1 + leak)
             f2 = 0.5 * (1 - leak)
             return f1 * x + f2 * abs(x)
 
-    def _autoencoder(self, input_shape, n_filters, filter_sizes):
-        """
-        Build a convolutional autoencoder with tied weights.
+    def _autoencoder(
+            self,
+            input_shape,
+            n_filters,
+            filter_sizes
+    ):
+        """Build a deep convolutional autoencoder w/ tied weights.
 
         Parameters
         ----------
-        input_shape: [batch_size, width, height, channels]
-        n_filters: [n_0, n_1, ..., n_n]
-        filter_sizes: [size_0, size_1, ..., size_n]
+        input_shape : [batch_size, width, height, channels]
+            Description
+        n_filters : [n_0, n_1, ..., n_n]
+            Description
+        filter_sizes : [size_0, size_1, ..., size_n]
+            Description
 
         Returns
         -------
         x : Tensor
             Input placeholder to the network
         z : Tensor
-            Inner most latent representation
+            Inner-most latent representation
         y : Tensor
             Output reconstruction of the input
         cost : Tensor
@@ -148,61 +145,56 @@ class ConvolutionalAutoencoder(object):
         Raises
         ------
         ValueError
-            Descroption
+            Description
         """
 
         if len(n_filters) != len(filter_sizes):
             raise ValueError(
-                "n_filters and filter_sizes lists must be of the same length: {0}, != {1}"
-                    .format(len(n_filters), len(filter_sizes))
+                "n_filters and filter_sizes lists must be of same length: {} != {}"
+                .format(len(n_filters), len(filter_sizes))
             )
 
-        # placeholder for input to the network
-        x = tf.placeholder(tf.float32, input_shape, name='x')
+        # input to the network
+        x = tf.placeholder(
+            tf.float32, input_shape, name='x')
 
         n_examples = input_shape[0]
         n_latent_units = n_filters[-1]
 
-        latent_layer_mask = tf.placeholder(tf.float32, (n_examples, n_latent_units), name='x')
+        latent_layer_mask = tf.placeholder(
+            tf.float32, (n_examples, n_latent_units), name='x')
 
         if len(x.get_shape()) != 4:
-            raise ValueError('input must be 4 dimensional.')
+            raise ValueError('Unsupported input dimensions')
 
         current_input = x
 
-        # construct encoder
+        # Build the encoder
         encoder = []
         shapes = []
         for layer_i, n_output in enumerate(n_filters):
+
             n_input = current_input.get_shape().as_list()[3]
 
             W = tf.Variable(
                 tf.random_uniform([
                     filter_sizes[layer_i],
                     filter_sizes[layer_i],
-                    n_input,
-                    n_output],
+                    n_input, n_output],
                     -1.0 / math.sqrt(n_input),
-                    1.0 / math.sqrt(n_input)),
-                name="Wh_{}".format(layer_i))
-            b = tf.Variable(tf.zeros([n_output]), name="bh_{}".format(layer_i))
-
-            # add weights and bias to the collection to save the model
-            tf.add_to_collection('weights-{}'.format(layer_i), W)
-            tf.add_to_collection('biass-{}'.format(layer_i), b)
+                    1.0 / math.sqrt(n_input)))
+            b = tf.Variable(tf.zeros([n_output]))
 
             encoder.append(W)
             output = self._lrelu(
                 tf.add(tf.nn.conv2d(
-                    current_input, W, stride=[1, 2, 2, 1], padding='SAME'
-                    ), b
-                )
-            )
-            pooled_output = tf.nn.max_pool(
-                output, ksize=[1, 2, 2, 1], stride=[1, 2, 2, 1], padding='SAME')
-            shapes.append(pooled_output.get_shape().as_list())
+                    current_input, W, strides=[1, 1, 1, 1], padding='SAME'), b))
 
-            current_input = pooled_output
+            output_pooled = tf.nn.max_pool(output, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+            shapes.append(output_pooled.get_shape().as_list())
+
+            current_input = output_pooled
 
         # store the latent convolved representation
         z = current_input
@@ -210,50 +202,46 @@ class ConvolutionalAutoencoder(object):
         encoder.reverse()
         shapes.reverse()
 
-        # rebuild the encoder using the same weights
+        # Build the decoder using the same weights
         for layer_i, shape in enumerate(shapes):
-
             W = encoder[layer_i]
             b = tf.Variable(tf.zeros([W.get_shape().as_list()[2]]))
 
-            new_height = shape[1] *2
-            new_width = shape[2] *2
+            new_height = shape[1] * 2
+            new_width = shape[2] * 2
             input_unpooled = tf.image.resize_images(current_input, new_height, new_width)
 
             batch_size = tf.shape(current_input)[0]
             n_channels = W.get_shape().as_list()[2]
 
-            output = self._lrelu(
-                tf.add(tf.nn.conv2d(
+            output = self._lrelu(tf.add(
+                tf.nn.conv2d_transpose(
                     input_unpooled, W,
                     tf.pack([batch_size, new_height, new_width, n_channels]),
-                    stride=[1, 2, 2, 1], padding='SAME'
-                    ), b
-                )
-            )
+                    strides=[1, 1, 1, 1], padding='SAME'), b))
 
             current_input = output
 
-        # reconstruction
+        # reconstruction after the network
         y = current_input
 
         # cost function measures pixel-wise difference
-        cost = tf.reduce_sum(tf.square(y -x))
+        cost = tf.reduce_sum(tf.square(y - x))
 
-        return {'x': x, 'z': z, 'y': y, 'cost': cost, 'latent_layer_mast': latent_layer_mask}
-
+        return {'x': x, 'z': z, 'y': y, 'cost': cost, 'latent_layer_mask': latent_layer_mask}
 
     @staticmethod
     def _random_batch_generator(images, batch_size=100):
 
-        # shuffle the images in every epoch
+        # Shuffle each epoch
         current_permutation = np.random.permutation(range(len(images)))
         epoch_images = images[current_permutation, ...]
 
         current_batch_idx = 0
         while current_batch_idx < len(images):
-            end_idx = min(current_batch_idx + batch_size, len(images))
-            subset = epoch_images[current_batch_idx: end_idx]
+            end_idx = min(
+                current_batch_idx + batch_size, len(images))
+            subset = epoch_images[current_batch_idx:end_idx]
             current_batch_idx += batch_size
             yield subset
 
