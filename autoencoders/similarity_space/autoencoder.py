@@ -1,7 +1,6 @@
 import math
 
-import numpy as np
-import tensorflow as tf
+import numpy as np import tensorflow as tf
 
 
 class SimilaritySpaceAutoencoder(object):
@@ -24,7 +23,12 @@ class SimilaritySpaceAutoencoder(object):
         return self._activation(training_data, ae, input_scaling, visualize_result)
 
     def _autoencoder(self, training_data):
+        """
+        structure of the autoencoder is defined here
+        """
 
+        # here noise level should be played around more
+        # NOTE remove the hard coded parameters later
         input = self._scale_to_minus_plus_one(self._add_noise(training_data, 0.05))
         output = self._scale_to_minus_plus_one(training_data)
 
@@ -66,6 +70,7 @@ class SimilaritySpaceAutoencoder(object):
 
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
+        # custom made cost function for the ad image dataset
         cost_function = \
             1 * reconstruction_error + \
             0.1 * correlation_score + \

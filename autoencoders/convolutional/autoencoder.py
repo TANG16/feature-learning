@@ -18,6 +18,7 @@ class ConvolutionalFeatureFinder(object):
 
         width, height, num_channels = images[0].shape
 
+        # this could be tested later
         batch_size = 100
         n_epochs = self.num_epochs
         n_examples = len(images)
@@ -26,8 +27,11 @@ class ConvolutionalFeatureFinder(object):
         if n_examples < batch_size:
             raise ValueError("Not enough training examples. Minimum {}, got {}".format(batch_size, n_examples))
 
+        # for later mean removal in training
         mean_img = np.mean(images, axis=0)
 
+        # build the autoencoder network and getting back x, y, z, cost in a dict
+        # for details reference _autoencoder method
         ae = self._autoencoder(
             input_shape=[None, width, height, num_channels],
             n_filters=self.n_filters,
@@ -35,6 +39,7 @@ class ConvolutionalFeatureFinder(object):
         )
 
         learning_rate = self.learning_rate
+        # apply optimizer
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
 
         sess = tf.Session()
@@ -51,14 +56,17 @@ class ConvolutionalFeatureFinder(object):
                 sess.run(optimizer, feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask})
             print(epoch_i, sess.run(ae['cost'], feed_dict={ae['x']: train, ae['latent_layer_mask']: no_op_latent_layer_mask}))
 
+        # NOTE methods are a bit nested, modify this later
         def output(latent_layer_mask):
 
             activations = []
             reconstructions = []
             n_examples = len(images)
 
+            # activation is done using the image index
+            # easier for apply the remainder of last batch
             def from_to(start_index, end_index):
-                batch_xs = images[start_index:end_index]
+                batch_xs = images[start_index:end_index] #slice of the training data
                 test = np.array([img - mean_img for img in batch_xs])
 
                 recon, z = sess.run([ae['y'], ae['z']], feed_dict={ae['x']: test, ae['latent_layer_mask']: latent_layer_mask})
@@ -83,6 +91,7 @@ class ConvolutionalFeatureFinder(object):
 
         original_reconstructions, original_latent_activations = output(no_op_latent_layer_mask)
 
+        # visualization is done in seperate class
         if visualize_result:
             from visualize import visualize
             visualize(images, original_latent_activations, original_reconstructions, output, mean_img)
