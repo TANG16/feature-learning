@@ -1,10 +1,10 @@
 
 from vionel_feature_learning.utils.image_utils import *
 
-images_path = "/home/erik/data/ads_datasets/welovead"
+images_path = "/data/ads_datasets/welovead"
 width_height = 64
-output_data_set_path = "/home/erik/data/ads_datasets/welovead_64x64_lab_flipped.npy"
-output_display_set_path = "/home/erik/data/ads_datasets/welovead_64x64_rgb.npy"
+output_data_set_path = "/data/ads_datasets/welovead_64x64_lab_flipped.npy"
+output_display_set_path = "/data/ads_datasets/welovead_64x64_rgb.npy"
 
 print "Preparing image data set.."
 image_data_set = build_data_set(

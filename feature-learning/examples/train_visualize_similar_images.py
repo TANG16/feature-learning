@@ -1,5 +1,5 @@
 
-from feature_learning.similar_image_feature_learner import SimilarImageFeatureLearner
+from feature_learning.feature_learner.similar_image_feature_learner import SimilarImageFeatureLearner
 from feature_learning.utils.integer_searcher import IntegerSearcher
 import argparse
 

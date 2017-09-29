@@ -1,11 +1,11 @@
 import numpy as np
-from vionel_feature_learning.autoencoders.convolutional.autoencoder import ConvolutionalFeatureFinder
-from vionel_feature_learning.autoencoders.similarity_space.autoencoder import SimilaritySpaceAutoencoder
+from feature_learning.autoencoders.convolutional.autoencoder import ConvolutionalFeatureFinder
+from feature_learning.autoencoders.similarity_space.autoencoder import SimilaritySpaceAutoencoder
 
 
-images_path = "/home/erik/data/ads_datasets/welovead_64x64_lab_flipped.npy"
+images_path = "/data/ads_datasets/welovead_64x64_lab_flipped.npy"
 n_images = 50000
-output_feature_data_path = "/home/erik/data/ads_datasets/welovead_64x64_lab_flipped_latent_features.npy"
+output_feature_data_path = "/data/ads_datasets/welovead_64x64_lab_flipped_latent_features.npy"
 
 
 def activation_map_mean(cnn_activations):

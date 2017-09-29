@@ -1,5 +1,5 @@
 
-from vionel_feature_learning.feature_learners.similar_image_feature_learner import SimilarImageFeatureLearner
+from feature_learning.feature_learners.similar_image_feature_learner import SimilarImageFeatureLearner
 import argparse
 
 parser = argparse.ArgumentParser()

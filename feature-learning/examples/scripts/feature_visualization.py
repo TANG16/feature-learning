@@ -4,12 +4,12 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from vionel_feature_learning import utils
+from feature_learning import utils
 from utils import semantic_hash_search
 
 
-feature_data_path = "/home/erik/data/ads_datasets/welovead_64x64_lab_flipped_latent_features.npy"
-images_path = "/home/erik/data/ads_datasets/welovead_64x64_rgb.npy"
+feature_data_path = "/data/ads_datasets/welovead_64x64_lab_flipped_latent_features.npy"
+images_path = "/data/ads_datasets/welovead_64x64_rgb.npy"
 
 
 def plot(axis, index, row_size, top_image):

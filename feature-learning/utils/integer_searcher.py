@@ -2,8 +2,8 @@ import sys
 import time
 
 import matplotlib.pyplot as plt
-from vionel_feature_learning.utils import semantic_hash_search
-from vionel_feature_learning.utils.image_utils import read_image_bgr, resize_image, bgr_to_rgb
+from feature_learning.utils import semantic_hash_search
+from feature_learning.utils.image_utils import read_image_bgr, resize_image, bgr_to_rgb
 
 
 class IntegerSearcher(object):
