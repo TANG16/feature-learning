@@ -1,4 +1,5 @@
 
+from feature_learning.autoencoders.convolutional.visualize import visualize
 import tensorflow as tf
 import numpy as np
 import math
@@ -93,7 +94,6 @@ class ConvolutionalFeatureFinder(object):
 
         # visualization is done in seperate class
         if visualize_result:
-            from visualize import visualize
             visualize(images, original_latent_activations, original_reconstructions, output, mean_img)
 
         all_activations_reordered = np.rollaxis(original_latent_activations, 3, 1)

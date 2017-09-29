@@ -1,5 +1,6 @@
 import math
 
+from feature_learning.autoencoders.convolutional.visualize import visualize
 import numpy as np import tensorflow as tf
 
 
@@ -114,7 +115,6 @@ class SimilaritySpaceAutoencoder(object):
         h = np.tanh(x * Wh + bh)
 
         if visualize_result:
-            from visualize import visualize
             visualize(Wh, bh, bo, h, test_data)
 
         return h

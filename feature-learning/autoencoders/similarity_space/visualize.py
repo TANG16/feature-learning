@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from vionel_feature_learning.utils import visualization
+from feature_learning.autoencoders.similarity_space.visualize import visualize
 
 
 def visualize(Wh, bh, bo, h, test_data):
